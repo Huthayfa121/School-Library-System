@@ -1,18 +1,21 @@
-import './App.css';
-import { useState } from 'react';
-const App = () => {
-  const [count, setCount] = useState(1);
-  const name = 'Zahraa';
 
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import { AppBar, Toolbar, Button, Container } from '@mui/material';
+import SignUp from './SignUp';
+import SignIn from './SignIn';
+import BooksTable from './Books';
+
+function App() {
   return (
-    <div className="App">
-      <button onClick={() => alert('What did I say 😤')}> Never Click me !! </button>
-      <h1>Hello, {name}!!</h1>
-      <h1>{count}</h1>
-      <button onClick={() => setCount((prevCount) => prevCount + 1 )}> Click Me for Extra Marks + </button>
-
-    </div>
+    <Router>
+        <Routes>
+        <Route path="/signin" element={<SignIn />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/Books" element={<BooksTable />} />
+        </Routes>
+    </Router>
   );
 }
-  
+
 export default App;
