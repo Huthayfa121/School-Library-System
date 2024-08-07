@@ -1,9 +1,32 @@
 const { MongoClient } = require('mongodb');
 
 // Replace with your MongoDB connection string
-const uri = 'mongodb+srv://huthayfashaheen:SIGMASH2003@sls.bamewgg.mongodb.net/?retryWrites=true&w=majority&appName=SLS';
+const uri = 'mongodb+srv://huthayfashaheen:SIGMASH2003@sls.bamewgg.mongodb.net/SLS';
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
+async function getUserByEmail(email) {
+    try {
+        await client.connect();
+        const db = client.db('SLS'); // Access the database
+        const usersCollection = db.collection('Users'); // Access the Users collection
+
+        // Find the user based on the email
+        const user = await usersCollection.findOne({ email: email });
+
+        if (user) {
+            console.log('User found:', user);
+            return user;
+        } else {
+            console.log('No user found with the provided email.');
+            return null;
+        }
+    } catch (error) {
+        console.error('Error finding user by email:', error);
+        return null;
+    } finally {
+        await client.close();
+    }
+}
 async function createCollections() {
     try {
         await client.connect();
@@ -112,5 +135,4 @@ async function createCollections() {
         await client.close();
     }
 }
-
-createCollections();
+module.exports = { getUserByEmail };

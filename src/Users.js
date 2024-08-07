@@ -5,28 +5,28 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
-const Books = () => {
-  const [books, setBooks] = useState([]);
+const Users = () => {
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(0);  // State to track the current page
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchBooks = async () => {
+    const fetchUsers = async () => {
       setLoading(true);  // Start loading when fetching data
       try {
-        const response = await axios.get(`http://localhost:3002/Books?p=${page}`); 
-        console.log(response.data)
-        setBooks(response.data);
+        const response = await axios.get(`http://localhost:3002/Users?p=${page}`); 
+        console.log(response.data);
+        setUsers(response.data);
         setLoading(false);
       } catch (err) {
-        setError('Error fetching books');
+        setError('Error fetching users');
         setLoading(false);
       }
     };
 
-    fetchBooks();
+    fetchUsers();
   }, [page]);  // Re-run effect when `page` changes
 
   const handleNextPage = () => {
@@ -41,10 +41,6 @@ const Books = () => {
     // Clear any authentication tokens here, if stored
     // Redirect to SignIn page
     navigate('/signin');
-  };
-
-  const handleAddBook = () => {
-    navigate('/AddBooks');  // Navigate to the AddBook page
   };
 
   if (loading) return <CircularProgress sx={{ display: 'block', margin: 'auto', marginTop: '20px' }} />;
@@ -68,39 +64,27 @@ const Books = () => {
       </AppBar>
 
       <Typography variant="h4" gutterBottom align="center" sx={{ marginTop: '20px' }}>
-        Library Books
+        Library Users
       </Typography>
 
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleAddBook}
-        sx={{ marginBottom: '20px' }}
-      >
-        Add New Book
-      </Button>
-
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        {books.map((book) => (
-          <Card key={book._id} sx={{ minWidth: 275, boxShadow: 3 }}>
+        {users.map((user) => (
+          <Card key={user._id} sx={{ minWidth: 275, boxShadow: 3 }}>
             <CardContent>
               <Typography variant="h6" component="div">
-                {book.title}
+                {user.name}
               </Typography>
               <Typography color="textSecondary">
-                Author: {book.author}
+                Email: {user.email}
               </Typography>
               <Typography color="textSecondary">
-                ISBN: {book.isbn}
+                Role: {user.role}
               </Typography>
               <Typography color="textSecondary">
-                Category: {book.category}
+                Date Joined: {new Date(user.dateJoined).toLocaleDateString()}
               </Typography>
               <Typography color="textSecondary">
-                Published Year: {book.publishedYear}
-              </Typography>
-              <Typography color="textSecondary">
-                Copies Available: {book.copiesAvailable}
+                Fine: ${user.fine ? user.fine.toFixed(2) : '0.00'}
               </Typography>
             </CardContent>
             <Divider />
@@ -121,7 +105,7 @@ const Books = () => {
           variant="contained" 
           color="primary" 
           onClick={handleNextPage}
-          disabled={books.length < 2}  // Disable if less than 2 books are shown
+          disabled={users.length < 2}  // Disable if less than 2 users are shown
         >
           Next
         </Button>
@@ -130,4 +114,4 @@ const Books = () => {
   );
 };
 
-export default Books;
+export default Users;

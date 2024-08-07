@@ -1,10 +1,11 @@
 
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
-import { AppBar, Toolbar, Button, Container } from '@mui/material';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import SignUp from './SignUp';
 import SignIn from './SignIn';
-import BooksTable from './Books';
+import Books from './Books';
+import Users from './Users';
+import AddBooks from './AddBooks';
 
 function App() {
   return (
@@ -12,7 +13,9 @@ function App() {
         <Routes>
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
-        <Route path="/Books" element={<BooksTable />} />
+        <Route path="/Books" element={<Books />} />
+        <Route path="/Users" element={<Users />} />
+        <Route path="/AddBooks" element={<AddBooks />} />
         </Routes>
     </Router>
   );
