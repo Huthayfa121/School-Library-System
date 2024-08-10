@@ -1,20 +1,18 @@
 const { MongoClient } = require('mongodb');
 
-// Replace with your MongoDB connection string
 const uri = 'mongodb+srv://huthayfashaheen:SIGMASH2003@sls.bamewgg.mongodb.net/SLS';
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+const client = new MongoClient(uri);
 
 async function getUserByEmail(email) {
     try {
         await client.connect();
-        const db = client.db('SLS'); // Access the database
-        const usersCollection = db.collection('Users'); // Access the Users collection
+        const db = client.db('SLS'); 
+        const usersCollection = db.collection('Users'); 
 
-        // Find the user based on the email
         const user = await usersCollection.findOne({ email: email });
 
         if (user) {
-            console.log('User found:', user);
+
             return user;
         } else {
             console.log('No user found with the provided email.');
@@ -30,9 +28,8 @@ async function getUserByEmail(email) {
 async function createCollections() {
     try {
         await client.connect();
-        const db = client.db('SLS'); // Create or access the database
+        const db = client.db('SLS'); 
 
-        // Users Collection
         const usersCollection = db.collection('Users');
         await usersCollection.insertMany([
             {
@@ -55,7 +52,6 @@ async function createCollections() {
             }
         ]);
 
-        // Books Collection
         const booksCollection = db.collection('Books');
         await booksCollection.insertMany([
             {
@@ -80,20 +76,19 @@ async function createCollections() {
             }
         ]);
 
-        // Borrowing Records Collection
         const borrowingRecordsCollection = db.collection('BorrowingRecords');
         await borrowingRecordsCollection.insertMany([
             {
                 userId: 'some_user_id',
                 bookId: 'some_book_id',
                 borrowDate: new Date(),
-                dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+                dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 
                 returnDate: null,
                 status: 'borrowed'
             }
         ]);
 
-        // Categories Collection
+
         const categoriesCollection = db.collection('Categories');
         await categoriesCollection.insertMany([
             {
@@ -106,7 +101,7 @@ async function createCollections() {
             }
         ]);
 
-        // Fines Collection
+
         const finesCollection = db.collection('Fines');
         await finesCollection.insertMany([
             {
@@ -117,7 +112,7 @@ async function createCollections() {
             }
         ]);
 
-        // Reservations Collection (Optional)
+
         const reservationsCollection = db.collection('Reservations');
         await reservationsCollection.insertMany([
             {

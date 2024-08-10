@@ -3,7 +3,7 @@ import axios from 'axios';
 import { 
   Container, Box, TextField, Button, Typography, AppBar, Toolbar 
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 const AddBooks = () => {
   const [title, setTitle] = useState('');
@@ -12,23 +12,28 @@ const AddBooks = () => {
   const [category, setCategory] = useState('');
   const [publishedYear, setPublishedYear] = useState('');
   const [copiesAvailable, setCopiesAvailable] = useState('');
+  const [price, setPrice] = useState('');
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
     const body = {
       title,
       author,
       isbn,
       category,
-      publishedYear,
-      copiesAvailable
+      publishedYear: parseInt(publishedYear, 10),
+      copiesAvailable: parseInt(copiesAvailable, 10),
+      totalCopies: parseInt(copiesAvailable, 10),  // totalCopies should also be an integer
+      price: parseInt(price, 10),
+      borrowedBy: [],
     };
 
     try {
       await axios.post('http://localhost:3002/Books', body);
-      navigate('/Books');  // Redirect to the Books page
+      navigate('/Books'); 
     } catch (err) {
       setError('Error adding book');
     }
@@ -38,9 +43,9 @@ const AddBooks = () => {
     <Container sx={{ marginTop: '20px' }}>
       <AppBar position="static">
         <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Typography variant="h6" component="div">
+          <Button color="inherit" component={RouterLink} to="/Welcome">
             Library
-          </Typography>
+          </Button>
         </Toolbar>
       </AppBar>
 
@@ -86,6 +91,13 @@ const AddBooks = () => {
           label="Published Year"
           value={publishedYear}
           onChange={(e) => setPublishedYear(e.target.value)}
+          fullWidth
+        />
+        <TextField
+          required
+          label="Price"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
           fullWidth
         />
         <TextField

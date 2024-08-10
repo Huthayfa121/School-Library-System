@@ -1,34 +1,58 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
-  CircularProgress, Typography, Container, Box, Card, CardContent, Divider, Button, AppBar, Toolbar 
+  CircularProgress, Typography, Container, Box, Card, CardContent, Divider, Button, AppBar, Toolbar, Dialog, DialogTitle, DialogContent, DialogActions, MenuItem, Select
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [page, setPage] = useState(0);  // State to track the current page
+  const [page, setPage] = useState(0);
   const navigate = useNavigate();
+  const [userName, setUserName] = useState('');
+  const userRole = localStorage.getItem('userRole');
+
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [selectedBookId, setSelectedBookId] = useState(null);
+  const [returnDialogOpen, setReturnDialogOpen] = useState(false);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    const storedUserName = localStorage.getItem('userName');
+    setUserName(storedUserName || '');
+    try {
+      const response = await axios.get(`http://localhost:3002/Users?p=${page}`); 
+
+      setUsers(response.data);
+      setLoading(false);
+    } catch (err) {
+      setError('Error fetching users');
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true);  // Start loading when fetching data
-      try {
-        const response = await axios.get(`http://localhost:3002/Users?p=${page}`); 
-        console.log(response.data);
-        setUsers(response.data);
-        setLoading(false);
-      } catch (err) {
-        setError('Error fetching users');
-        setLoading(false);
-      }
-    };
-
     fetchUsers();
-  }, [page]);  // Re-run effect when `page` changes
+  }, [page]);
 
+  const handleReturnBook = async () => {
+    if (!selectedUserId || !selectedBookId) {
+      console.error('User ID or Book ID is null, cannot return book');
+      return;
+    }
+    try {
+      await axios.post('http://localhost:3002/ReturnBook', {
+        userId: selectedUserId,
+        bookId: selectedBookId,
+      });
+      setReturnDialogOpen(false);
+      fetchUsers(); // Refresh the users list after returning the book
+    } catch (err) {
+      console.error('Error returning book:', err);
+    }
+  };
   const handleNextPage = () => {
     setPage((prevPage) => prevPage + 1);
   };
@@ -38,8 +62,6 @@ const Users = () => {
   };
 
   const handleSignOut = () => {
-    // Clear any authentication tokens here, if stored
-    // Redirect to SignIn page
     navigate('/signin');
   };
 
@@ -50,8 +72,16 @@ const Users = () => {
     <Container sx={{ marginTop: '20px' }}>
       <AppBar position="static">
         <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Typography variant="h6" component="div">
+          <Button 
+            color="inherit" 
+            component={RouterLink}
+            to="/Welcome"
+            aria-label="library"
+          >
             Library
+          </Button>
+          <Typography variant="h6" sx={{ color: 'red' }}>
+                  {userName}
           </Typography>
           <Button 
             color="inherit" 
@@ -66,6 +96,17 @@ const Users = () => {
       <Typography variant="h4" gutterBottom align="center" sx={{ marginTop: '20px' }}>
         Library Users
       </Typography>
+
+      {userRole !== 'member' && (
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => navigate('/SignUp')}
+          sx={{ marginBottom: '20px' }}
+        >
+          Add A New User
+        </Button>
+      )}
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         {users.map((user) => (
@@ -82,10 +123,40 @@ const Users = () => {
               </Typography>
               <Typography color="textSecondary">
                 Date Joined: {new Date(user.dateJoined).toLocaleDateString()}
-              </Typography>
+              </Typography> 
               <Typography color="textSecondary">
                 Fine: ${user.fine ? user.fine.toFixed(2) : '0.00'}
               </Typography>
+
+              {user.borrowedBooks.length > 0 ? (
+                <>
+                  <Typography variant="subtitle1" sx={{ marginTop: '10px' }}>
+                    Borrowed Books:
+                  </Typography>
+                  <Box sx={{ marginLeft: '20px' }}>
+                    {user.borrowedBooks.map((borrowedBook, index) => (
+                      <Typography key={index} color="textSecondary">
+                        Book ID: {borrowedBook.bookId} - Due Date: {new Date(borrowedBook.dueDate).toLocaleDateString()}
+                      </Typography>
+                    ))}
+                  </Box>
+                  <Button
+                    onClick={() => {
+                      setSelectedUserId(user._id);
+                      setReturnDialogOpen(true);
+                    }}
+                    variant="contained"
+                    color="secondary"
+                    sx={{ marginTop: '10px' }}
+                  >
+                    Return Book
+                  </Button>
+                </>
+              ) : (
+                <Typography color="textSecondary" sx={{ marginTop: '10px' }}>
+                  No borrowed books
+                </Typography>
+              )}
             </CardContent>
             <Divider />
           </Card>
@@ -96,8 +167,8 @@ const Users = () => {
         <Button 
           variant="contained" 
           color="primary" 
-          onClick={handlePreviousPage}
-          disabled={page === 0}  // Disable the button on the first page
+          onClick={handlePreviousPage} 
+          disabled={page === 0}
         >
           Previous
         </Button>
@@ -105,11 +176,38 @@ const Users = () => {
           variant="contained" 
           color="primary" 
           onClick={handleNextPage}
-          disabled={users.length < 2}  // Disable if less than 2 users are shown
         >
           Next
         </Button>
       </Box>
+
+      <Dialog open={returnDialogOpen} onClose={() => setReturnDialogOpen(false)}>
+        <DialogTitle>Select a Book to Return</DialogTitle>
+        <DialogContent>
+          <Select
+            value={selectedBookId}
+            onChange={(e) => setSelectedBookId(e.target.value)}
+            fullWidth
+          >
+            {users
+              .find((user) => user._id === selectedUserId)
+              ?.borrowedBooks.map((borrowedBook) => (
+                <MenuItem key={borrowedBook.bookId} value={borrowedBook.bookId}>
+                  {borrowedBook.bookId} - Due:{" "}
+                  {new Date(borrowedBook.dueDate).toLocaleDateString()}
+                </MenuItem>
+              ))}
+          </Select>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setReturnDialogOpen(false)} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleReturnBook} color="primary">
+            Return Book
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

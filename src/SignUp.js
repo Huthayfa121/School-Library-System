@@ -20,28 +20,49 @@ const defaultTheme = createTheme();
 
 export default function SignUp() {
   const navigate = useNavigate();
-  const [errors, ] = useState({});
+  const [errors, setErrors] = useState({});
 
+  const validate = (userData) => {
+    const errors = {};
+    if (!userData.name) {
+      errors.username = 'Username is required';
+    }
+    if (!userData.email) {
+      errors.email = 'Email is required';
+    }
+    if (!userData.password) {
+      errors.password = 'Password is required';
+    }
+    if (userData.password !== userData.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+    return errors;
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const userData = {
-      name: data.get('name'),
+      name: data.get('name'), // Ensure this matches the form field
       email: data.get('email'),
       password: data.get('password'),
       confirmPassword: data.get('confirmPassword'),
-      role: 'member', 
+      role: 'member',
       dateJoined: new Date(),
-      borrowedBooks: [], 
-      fine: 0
+      borrowedBooks: [],
+      fine: 0,
     };
 
+    const validationErrors = validate(userData);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
 
     try {
       const response = await axios.post('http://localhost:3002/Signup', userData);
       console.log(response.data);
-      navigate('/Books');  
+      navigate('/Books');
     } catch (error) {
       console.error('Error signing up:', error);
     }
@@ -70,9 +91,9 @@ export default function SignUp() {
               margin="normal"
               required
               fullWidth
-              id="username"
+              id="name"
               label="Username"
-              name="username"
+              name="name"
               autoComplete="username"
               autoFocus
               error={Boolean(errors.username)}

@@ -17,20 +17,29 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { Link as RouterLink } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 
-
 const defaultTheme = createTheme();
 
 export default function SignIn() {
   const navigate = useNavigate();
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const email = data.get('email');
     const password = data.get('password');
+  
     try {
       const response = await axios.post('http://localhost:3002/Signin', { email, password });
-        console.log(response.data)  
-        navigate('/Books');
+      const userRole = response.data.role; 
+      const userName = response.data.name; 
+      const userId = response.data.userId; 
+      console.log(userId)// Make sure this is the correct key from the response
+  
+      localStorage.setItem('userRole', userRole);
+      localStorage.setItem('userName', userName); 
+      localStorage.setItem('userId', userId); 
+  
+      navigate('/Welcome');
     } catch (error) {
       console.error('Error signing in:', error);
     }

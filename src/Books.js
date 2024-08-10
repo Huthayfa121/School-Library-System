@@ -1,98 +1,126 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { 
-  CircularProgress, Typography, Container, Box, Card, CardContent, Divider, Button, AppBar, Toolbar 
-} from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import {
+  CircularProgress,
+  Typography,
+  Container,
+  Box,
+  Card,
+  CardContent,
+  Divider,
+  Button,
+  AppBar,
+  Toolbar,
+} from "@mui/material";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 const Books = () => {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [page, setPage] = useState(0);  // State to track the current page
+  const [page, setPage] = useState(0);
+  const [userId, setUserId] = useState("");
   const navigate = useNavigate();
+  const userRole = localStorage.getItem("userRole");
+  const [userName, setUserName] = useState("");
+
+  const fetchBooks = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`http://localhost:3002/Books?p=${page}`); 
+      setBooks(response.data);
+      setLoading(false);
+    } catch (err) {
+      setError("Error fetching books");
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchBooks = async () => {
-      setLoading(true);  // Start loading when fetching data
-      try {
-        const response = await axios.get(`http://localhost:3002/Books?p=${page}`); 
-        console.log(response.data)
-        setBooks(response.data);
-        setLoading(false);
-      } catch (err) {
-        setError('Error fetching books');
-        setLoading(false);
-      }
-    };
-
+    const storedUserName = localStorage.getItem("userName");
+    const storedUserId = localStorage.getItem("userId");
+    
+    if (storedUserId) {
+      setUserId(storedUserId);
+    } else {
+      console.error("User ID not found in local storage");
+    }
+  
+    setUserName(storedUserName || "");
     fetchBooks();
-  }, [page]);  // Re-run effect when `page` changes
+  }, [page]);
 
-  const handleNextPage = () => {
-    setPage((prevPage) => prevPage + 1);
+  const handleBorrowBook = async (bookId) => {
+    if (!userId) {
+      console.error("User ID is null, cannot borrow book");
+      return;
+    }
+    try {
+      await axios.post("http://localhost:3002/BorrowBook", { userId, bookId });
+      fetchBooks();  
+    } catch (err) {
+      console.error("Error borrowing book:", err);
+    }
   };
 
-  const handlePreviousPage = () => {
-    if (page > 0) setPage((prevPage) => prevPage - 1);
-  };
-
-  const handleSignOut = () => {
-    // Clear any authentication tokens here, if stored
-    // Redirect to SignIn page
-    navigate('/signin');
-  };
-
-  const handleAddBook = () => {
-    navigate('/AddBooks');  // Navigate to the AddBook page
-  };
-
-  if (loading) return <CircularProgress sx={{ display: 'block', margin: 'auto', marginTop: '20px' }} />;
-  if (error) return <Typography color="error" align="center">{error}</Typography>;
+  if (loading)
+    return (
+      <CircularProgress
+        sx={{ display: "block", margin: "auto", marginTop: "20px" }}
+      />
+    );
+  if (error)
+    return (
+      <Typography color="error" align="center">
+        {error}
+      </Typography>
+    );
 
   return (
-    <Container sx={{ marginTop: '20px' }}>
+    <Container sx={{ marginTop: "20px" }}>
       <AppBar position="static">
-        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Typography variant="h6" component="div">
+        <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+          <Button color="inherit" component={RouterLink} to="/Welcome">
             Library
+          </Button>
+          <Typography variant="h6" sx={{ color: "red" }}>
+            {userName}
           </Typography>
-          <Button 
-            color="inherit" 
-            onClick={handleSignOut} 
-            aria-label="sign out"
-          >
+          <Button color="inherit" onClick={() => navigate("/signin")}>
             Sign Out
           </Button>
         </Toolbar>
       </AppBar>
 
-      <Typography variant="h4" gutterBottom align="center" sx={{ marginTop: '20px' }}>
+      <Typography
+        variant="h4"
+        gutterBottom
+        align="center"
+        sx={{ marginTop: "20px" }}
+      >
         Library Books
       </Typography>
 
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleAddBook}
-        sx={{ marginBottom: '20px' }}
-      >
-        Add New Book
-      </Button>
+      {userRole !== "member" && (
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => navigate("/AddBooks")}
+          sx={{ marginBottom: "20px" }}
+        >
+          Add New Book
+        </Button>
+      )}
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: "20px" }}>
         {books.map((book) => (
           <Card key={book._id} sx={{ minWidth: 275, boxShadow: 3 }}>
             <CardContent>
-              <Typography variant="h6" component="div">
-                {book.title}
-              </Typography>
+              <Typography variant="h6">{book.title}</Typography>
               <Typography color="textSecondary">
                 Author: {book.author}
               </Typography>
-              <Typography color="textSecondary">
-                ISBN: {book.isbn}
-              </Typography>
+              <Typography color="textSecondary">ISBN: {book.isbn}</Typography>
               <Typography color="textSecondary">
                 Category: {book.category}
               </Typography>
@@ -102,26 +130,44 @@ const Books = () => {
               <Typography color="textSecondary">
                 Copies Available: {book.copiesAvailable}
               </Typography>
+              <Typography color="textSecondary">
+                Price: {book.price}$
+              </Typography>
             </CardContent>
             <Divider />
+            <Button
+              onClick={() => handleBorrowBook(book._id, book.Price)}
+              variant="contained"
+              color="primary"
+              disabled={book.copiesAvailable === 0}
+              sx={{ margin: "10px" }}
+            >
+              Borrow
+            </Button>
           </Card>
         ))}
       </Box>
-
-      <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '20px', gap: '20px' }}>
-        <Button 
-          variant="contained" 
-          color="primary" 
-          onClick={handlePreviousPage}
-          disabled={page === 0}  // Disable the button on the first page
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          marginTop: "20px",
+          gap: "20px",
+        }}
+      >
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => setPage((prevPage) => prevPage - 1)}
+          disabled={page === 0}
         >
           Previous
         </Button>
-        <Button 
-          variant="contained" 
-          color="primary" 
-          onClick={handleNextPage}
-          disabled={books.length < 2}  // Disable if less than 2 books are shown
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => setPage((prevPage) => prevPage + 1)}
+          disabled={books.length < 3}
         >
           Next
         </Button>
