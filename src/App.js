@@ -7,6 +7,8 @@ import Books from './Books';
 import Users from './Users';
 import AddBooks from './AddBooks';
 import Welcome from './Welcome';
+import MyBooks from './MyBooks';
+
 
 function App() {
   return (
@@ -18,6 +20,8 @@ function App() {
         <Route path="/Users" element={<Users />} />
         <Route path="/AddBooks" element={<AddBooks />} />
         <Route path="/Welcome" element={<Welcome />} />
+        <Route path="/MyBooks" element={<MyBooks />} />
+
         </Routes>
     </Router>
   );

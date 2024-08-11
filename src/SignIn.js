@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import {
   Button,
@@ -14,34 +14,34 @@ import {
   ThemeProvider,
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { Link as RouterLink } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
 const defaultTheme = createTheme();
 
 export default function SignIn() {
   const navigate = useNavigate();
+  const [error, setError] = useState(null); // State for handling errors
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const email = data.get('email');
     const password = data.get('password');
-  
+
     try {
       const response = await axios.post('http://localhost:3002/Signin', { email, password });
-      const userRole = response.data.role; 
-      const userName = response.data.name; 
-      const userId = response.data.userId; 
-      console.log(userId)// Make sure this is the correct key from the response
-  
+      const userRole = response.data.role;
+      const userName = response.data.name;
+      const userId = response.data.userId;
+
       localStorage.setItem('userRole', userRole);
-      localStorage.setItem('userName', userName); 
-      localStorage.setItem('userId', userId); 
-  
+      localStorage.setItem('userName', userName);
+      localStorage.setItem('userId', userId);
+
       navigate('/Welcome');
     } catch (error) {
       console.error('Error signing in:', error);
+      setError('Invalid email or password'); // Display error message
     }
   };
 
@@ -63,6 +63,7 @@ export default function SignIn() {
           <Typography component="h1" variant="h5">
             Sign in
           </Typography>
+          {error && <Typography color="error">{error}</Typography>} {/* Error message display */}
           <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
             <TextField
               margin="normal"
@@ -105,6 +106,14 @@ export default function SignIn() {
                 </Link>
               </Grid>
             </Grid>
+            <Button
+              onClick={() => navigate('/Welcome')}
+              fullWidth
+              variant="outlined"
+              sx={{ mt: 2 }}
+            >
+              {'<- Back to Home'}
+            </Button>
           </Box>
         </Box>
       </Container>

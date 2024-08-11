@@ -21,6 +21,7 @@ const defaultTheme = createTheme();
 export default function SignUp() {
   const navigate = useNavigate();
   const [errors, setErrors] = useState({});
+  const [emailError, setEmailError] = useState(null); // For unique email check
 
   const validate = (userData) => {
     const errors = {};
@@ -60,6 +61,13 @@ export default function SignUp() {
     }
 
     try {
+      // Check if the email already exists before making the sign-up request
+      const existingUserResponse = await axios.get(`http://localhost:3002/Users?email=${userData.email}`);
+      if (existingUserResponse.data.length > 0) {
+        setEmailError('Email is already in use');
+        return;
+      }
+
       const response = await axios.post('http://localhost:3002/Signup', userData);
       console.log(response.data);
       navigate('/Books');
@@ -107,8 +115,8 @@ export default function SignUp() {
               label="Email Address"
               name="email"
               autoComplete="email"
-              error={Boolean(errors.email)}
-              helperText={errors.email}
+              error={Boolean(errors.email) || Boolean(emailError)}
+              helperText={errors.email || emailError}
             />
             <TextField
               margin="normal"
@@ -139,17 +147,24 @@ export default function SignUp() {
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
-              aria-label="sign up"
             >
               Sign Up
             </Button>
             <Grid container justifyContent="flex-end">
               <Grid item>
-                <Link component={RouterLink} to="/signin" variant="body2" aria-label="sign in">
+                <Link component={RouterLink} to="/signin" variant="body2">
                   Already have an account? Sign in
                 </Link>
               </Grid>
             </Grid>
+            <Button
+              onClick={() => navigate('/Welcome')}
+              fullWidth
+              variant="outlined"
+              sx={{ mt: 2 }}
+            >
+              {'<- Back to Home'}
+            </Button>
           </Box>
         </Box>
       </Container>

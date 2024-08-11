@@ -11,18 +11,31 @@ import {
   Button,
   AppBar,
   Toolbar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  List,
+  ListItem,
+  ListItemText,
 } from "@mui/material";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
+
 
 const Books = () => {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(0);
-  const [userId, setUserId] = useState("");
+  const [, setUserId] = useState("");
+  const [userName, setUserName] = useState("");
+  const [userList, setUserList] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [currentBookId, setCurrentBookId] = useState(null);
   const navigate = useNavigate();
   const userRole = localStorage.getItem("userRole");
-  const [userName, setUserName] = useState("");
+
 
   const fetchBooks = async () => {
     setLoading(true);
@@ -33,6 +46,17 @@ const Books = () => {
     } catch (err) {
       setError("Error fetching books");
       setLoading(false);
+    }
+  };
+
+  const fetchUsers = async (page = 0, pageSize = 6) => {
+    try {
+
+      const response = await axios.get(`http://localhost:3002/Users?p=${page}&limit=${pageSize}`);
+      console.log(response.data)
+      setUserList(response.data);
+    } catch (err) {
+      console.error("Error fetching users:", err);
     }
   };
 
@@ -50,17 +74,29 @@ const Books = () => {
     fetchBooks();
   }, [page]);
 
-  const handleBorrowBook = async (bookId) => {
-    if (!userId) {
-      console.error("User ID is null, cannot borrow book");
+  const handleBorrowBook = async () => {
+    if (!selectedUser) {
+      console.error("No user selected, cannot borrow book");
       return;
     }
     try {
-      await axios.post("http://localhost:3002/BorrowBook", { userId, bookId });
-      fetchBooks();  
+      await axios.post("http://localhost:3002/BorrowBook", { userId: selectedUser, bookId: currentBookId });
+      setDialogOpen(false);
+      fetchBooks();
     } catch (err) {
       console.error("Error borrowing book:", err);
     }
+  };
+
+  const handleOpenDialog = async (bookId) => {
+    setCurrentBookId(bookId);
+    await fetchUsers(0); // Fetch users when opening the dialog
+    setSelectedUser(null);
+    setDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
   };
 
   if (loading)
@@ -76,6 +112,8 @@ const Books = () => {
       </Typography>
     );
 
+  const isUserSignedIn = !!userName;
+
   return (
     <Container sx={{ marginTop: "20px" }}>
       <AppBar position="static">
@@ -86,9 +124,11 @@ const Books = () => {
           <Typography variant="h6" sx={{ color: "red" }}>
             {userName}
           </Typography>
-          <Button color="inherit" onClick={() => navigate("/signin")}>
-            Sign Out
-          </Button>
+          {isUserSignedIn && (
+            <Button color="inherit" onClick={() => navigate("/signin")}>
+              Sign Out
+            </Button>
+          )}
         </Toolbar>
       </AppBar>
 
@@ -101,7 +141,7 @@ const Books = () => {
         Library Books
       </Typography>
 
-      {userRole !== "member" && (
+      {isUserSignedIn && userRole !== "member" && (
         <Button
           variant="contained"
           color="primary"
@@ -135,18 +175,21 @@ const Books = () => {
               </Typography>
             </CardContent>
             <Divider />
-            <Button
-              onClick={() => handleBorrowBook(book._id, book.Price)}
-              variant="contained"
-              color="primary"
-              disabled={book.copiesAvailable === 0}
-              sx={{ margin: "10px" }}
-            >
-              Borrow
-            </Button>
+            {isUserSignedIn && userRole !== "member" && (
+              <Button
+                onClick={() => handleOpenDialog(book._id)}
+                variant="contained"
+                color="primary"
+                disabled={book.copiesAvailable === 0}
+                sx={{ margin: "10px" }}
+              >
+                Lend
+              </Button>
+            )}
           </Card>
         ))}
       </Box>
+
       <Box
         sx={{
           display: "flex",
@@ -172,6 +215,35 @@ const Books = () => {
           Next
         </Button>
       </Box>
+
+      <Dialog open={dialogOpen} onClose={handleCloseDialog}>
+        <DialogTitle>Select User to Lend Book</DialogTitle>
+        <DialogContent>
+          <List>
+            {userList.map((user) => (
+              <ListItem 
+                button
+                key={user._id}
+                onClick={() => setSelectedUser(user._id)}
+              >
+                <ListItemText primary={user.name} />
+              </ListItem>
+            ))}
+          </List>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="primary">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleBorrowBook}
+            color="primary"
+            disabled={!selectedUser}
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

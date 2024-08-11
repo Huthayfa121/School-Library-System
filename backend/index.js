@@ -28,13 +28,10 @@ connectToDb((err) => {
 
 app.get('/Users', async (req, res) => {
     const page = parseInt(req.query.p) || 0;
-    const pageSize = 10; // Number of users per page
   
     try {
       const users = await db.collection('Users')
         .find({})
-        .skip(page * pageSize)
-        .limit(pageSize)
         .toArray();
   
       res.json(users);
@@ -107,7 +104,6 @@ app.post('/ReturnBook', async (req, res) => {
       return res.status(404).json({ message: 'User or Book not found' });
     }
 
-    // Find the borrowed book entry in the user's borrowedBooks array
     const borrowedBook = user.borrowedBooks.find(b => b.bookId.toString() === bookId);
     
     if (!borrowedBook) {
@@ -118,25 +114,22 @@ app.post('/ReturnBook', async (req, res) => {
     const dueDate = new Date(borrowedBook.dueDate);
     let updatedFine = user.fine;
 
-    // Check if the book is returned late
     if (currentDate > dueDate) {
       const lateDays = Math.ceil((currentDate - dueDate) / (24 * 60 * 60 * 1000));
-      const fineForLateReturn = lateDays * (book.price * 0.1); // 10% of the book price per day
+      const fineForLateReturn = lateDays * (book.price * 0.1);
       updatedFine += fineForLateReturn;
     } else {
       updatedFine -= book.price 
     }
 
-    // Update user's borrowedBooks and fine
     await db.collection('Users').updateOne(
       { _id: new ObjectId(userId) },
       { 
-        $pull: { borrowedBooks: { bookId: new ObjectId(bookId), dueDate } }, // Remove the returned book from borrowedBooks
-        $set: { fine: updatedFine } // Update the user's fine
+        $pull: { borrowedBooks: { bookId: new ObjectId(bookId), dueDate } }, 
+        $set: { fine: updatedFine } 
       }
     );
 
-    // Increase the available copies of the book
     await db.collection('Books').updateOne(
       { _id: new ObjectId(bookId) },
       { $inc: { copiesAvailable: 1 } }
@@ -212,7 +205,6 @@ app.post('/Signup', async (req, res) => {
         const result = await db.collection('Users').insertOne(newUser);
               console.log(newUser)
 
-        // Optional: Send a welcome email (ensure transporter is defined elsewhere in your code)
         const mailOptions = {
             from: 'huthayfas999@gmail.com',
             to: email,
@@ -228,7 +220,6 @@ app.post('/Signup', async (req, res) => {
             }
         });
 
-        // Respond with success message
         res.status(201).json({
             message: 'User registered successfully',
             userId: result.insertedId,
@@ -265,10 +256,31 @@ app.post('/Signin', async (req, res) => {
       role: user.role,
       name: user.name,
       fine: user.fine,
-      userId: user._id, // Ensure the correct key is used
+      userId: user._id, 
     });
   } catch (err) {
     console.error('Error during sign-in:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get('/Users/:id', async (req, res) => {
+  const { id } = req.params;
+
+  if (!ObjectId.isValid(id)) {
+    return res.status(400).json({ message: 'Invalid user ID' });
+  }
+
+  try {
+    const user = await db.collection('Users').findOne({ _id: new ObjectId(id) });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json(user);
+  } catch (err) {
+    console.error('Error fetching user:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });

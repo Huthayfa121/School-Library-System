@@ -1,15 +1,23 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { 
-  Container, Box, TextField, Button, Typography, AppBar, Toolbar 
+  Container, Box, TextField, Button, Typography, AppBar, Toolbar, Select, MenuItem, InputLabel, FormControl, Chip 
 } from '@mui/material';
 import { Link as RouterLink, useNavigate } from "react-router-dom";
+
+const genresList = [
+  "Art", "Biography", "Business", "Chick Lit", "Children's", "Christian", "Classics", "Comics", "Contemporary", "Cookbooks",
+  "Crime", "Ebooks", "Fantasy", "Fiction", "Gay and Lesbian", "Graphic Novels", "Historical Fiction", "History", "Horror", 
+  "Humor and Comedy", "Manga", "Memoir", "Music", "Mystery", "Nonfiction", "Paranormal", "Philosophy", "Poetry", "Psychology",
+  "Religion", "Romance", "Science", "Science Fiction", "Self Help", "Suspense", "Spirituality", "Sports", "Thriller", "Travel", 
+  "Young Adult"
+];
 
 const AddBooks = () => {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [isbn, setIsbn] = useState('');
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState([]);
   const [publishedYear, setPublishedYear] = useState('');
   const [copiesAvailable, setCopiesAvailable] = useState('');
   const [price, setPrice] = useState('');
@@ -26,7 +34,7 @@ const AddBooks = () => {
       category,
       publishedYear: parseInt(publishedYear, 10),
       copiesAvailable: parseInt(copiesAvailable, 10),
-      totalCopies: parseInt(copiesAvailable, 10),  // totalCopies should also be an integer
+      totalCopies: parseInt(copiesAvailable, 10),
       price: parseInt(price, 10),
       borrowedBy: [],
     };
@@ -37,6 +45,10 @@ const AddBooks = () => {
     } catch (err) {
       setError('Error adding book');
     }
+  };
+
+  const handleCategoryChange = (event) => {
+    setCategory(event.target.value);
   };
 
   return (
@@ -79,13 +91,27 @@ const AddBooks = () => {
           onChange={(e) => setIsbn(e.target.value)}
           fullWidth
         />
-        <TextField
-          required
-          label="Category"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          fullWidth
-        />
+        <FormControl fullWidth>
+          <InputLabel>Genres</InputLabel>
+          <Select
+            multiple
+            value={category}
+            onChange={handleCategoryChange}
+            renderValue={(selected) => (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {selected.map((value) => (
+                  <Chip key={value} label={value} />
+                ))}
+              </Box>
+            )}
+          >
+            {genresList.map((genre) => (
+              <MenuItem key={genre} value={genre}>
+                {genre}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
         <TextField
           required
           label="Published Year"
