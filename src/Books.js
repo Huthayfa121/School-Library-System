@@ -90,7 +90,7 @@ const Books = () => {
 
   const handleOpenDialog = async (bookId) => {
     setCurrentBookId(bookId);
-    await fetchUsers(0); // Fetch users when opening the dialog
+    await fetchUsers(0); 
     setSelectedUser(null);
     setDialogOpen(true);
   };
@@ -249,3 +249,4 @@ const Books = () => {
 };
 
 export default Books;
+ 

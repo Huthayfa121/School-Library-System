@@ -64,7 +64,7 @@ export default function Welcome() {
     navigate('/signin');
   };
 
-  const isUserSignedIn = !!userName; // Check if userName is not an empty string
+  const isUserSignedIn = !!userName; 
 
   return (
     <ThemeProvider theme={theme}>

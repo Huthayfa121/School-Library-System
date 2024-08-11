@@ -26,6 +26,37 @@ connectToDb((err) => {
     }
 });
 
+app.post('/ForgotPassword', async (req, res) => {
+  const { email, oldPassword, newPassword } = req.body;
+
+  if (!email || !oldPassword || !newPassword) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  try {
+    const user = await getUserByEmail(email);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.password !== oldPassword) {
+      return res.status(401).json({ message: 'Old password is incorrect' });
+    }
+
+    await db.collection('Users').updateOne(
+      { email },
+      { $set: { password: newPassword } }
+    );
+
+    res.status(200).json({ message: 'Password updated successfully' });
+  } catch (err) {
+    console.error('Error updating password:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
 app.get('/Users', async (req, res) => {
     const page = parseInt(req.query.p) || 0;
   
@@ -166,15 +197,7 @@ app.get('/Books', (req, res) => {
 })
 
 app.post('/Signup', async (req, res) => {
-    require('dotenv').config();
 
-  const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-    },
-  });
     const { name, email, password, confirmPassword} = req.body;
 
     if (!name || !email || !password || !confirmPassword) {
@@ -204,21 +227,6 @@ app.post('/Signup', async (req, res) => {
 
         const result = await db.collection('Users').insertOne(newUser);
               console.log(newUser)
-
-        const mailOptions = {
-            from: 'huthayfas999@gmail.com',
-            to: email,
-            subject: 'Welcome to Our Service',
-            text: 'Thank you for signing up!',
-        };
-
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.error('Error sending email:', error);
-            } else {
-                console.log('Email sent:', info.response);
-            }
-        });
 
         res.status(201).json({
             message: 'User registered successfully',

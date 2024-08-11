@@ -8,6 +8,8 @@ import Users from './Users';
 import AddBooks from './AddBooks';
 import Welcome from './Welcome';
 import MyBooks from './MyBooks';
+import ForgotPassword from './ForgotPassword';
+
 
 
 function App() {
@@ -21,6 +23,8 @@ function App() {
         <Route path="/AddBooks" element={<AddBooks />} />
         <Route path="/Welcome" element={<Welcome />} />
         <Route path="/MyBooks" element={<MyBooks />} />
+        <Route path="/ForgotPassword" element={<ForgotPassword />} />
+
 
         </Routes>
     </Router>

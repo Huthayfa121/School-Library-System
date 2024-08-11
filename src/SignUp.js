@@ -21,7 +21,7 @@ const defaultTheme = createTheme();
 export default function SignUp() {
   const navigate = useNavigate();
   const [errors, setErrors] = useState({});
-  const [emailError, setEmailError] = useState(null); // For unique email check
+  const [emailError, setEmailError] = useState(null); 
 
   const validate = (userData) => {
     const errors = {};
@@ -44,7 +44,7 @@ export default function SignUp() {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const userData = {
-      name: data.get('name'), // Ensure this matches the form field
+      name: data.get('name'),
       email: data.get('email'),
       password: data.get('password'),
       confirmPassword: data.get('confirmPassword'),
@@ -52,6 +52,8 @@ export default function SignUp() {
       dateJoined: new Date(),
       borrowedBooks: [],
       fine: 0,
+
+      
     };
 
     const validationErrors = validate(userData);
@@ -61,12 +63,7 @@ export default function SignUp() {
     }
 
     try {
-      // Check if the email already exists before making the sign-up request
-      const existingUserResponse = await axios.get(`http://localhost:3002/Users?email=${userData.email}`);
-      if (existingUserResponse.data.length > 0) {
-        setEmailError('Email is already in use');
-        return;
-      }
+
 
       const response = await axios.post('http://localhost:3002/Signup', userData);
       console.log(response.data);

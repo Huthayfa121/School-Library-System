@@ -20,7 +20,7 @@ const defaultTheme = createTheme();
 
 export default function SignIn() {
   const navigate = useNavigate();
-  const [error, setError] = useState(null); // State for handling errors
+  const [error, setError] = useState(null); 
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -41,7 +41,7 @@ export default function SignIn() {
       navigate('/Welcome');
     } catch (error) {
       console.error('Error signing in:', error);
-      setError('Invalid email or password'); // Display error message
+      setError('Invalid email or password'); 
     }
   };
 
@@ -96,8 +96,8 @@ export default function SignIn() {
             </Button>
             <Grid container>
               <Grid item xs>
-                <Link href="#" variant="body2" aria-label="forgot password">
-                  Forgot password?
+                <Link component={RouterLink} to="/ForgotPassword" variant="body2" aria-label="forgot password">
+                  {"Forgot password?"}
                 </Link>
               </Grid>
               <Grid item>
